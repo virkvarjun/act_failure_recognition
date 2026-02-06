@@ -6,7 +6,7 @@ from pathlib import Path
 
 class FailureClassifier(nn.Module):
     """Mirror the architecture from training."""
-    def __init__(self, input_dim=96, hidden_dims=[64, 32]):
+    def __init__(self, input_dim=96, hidden_dims=[64, 32], dropout=0.3):
         super().__init__()
         layers = []
         prev_dim = input_dim
@@ -14,6 +14,7 @@ class FailureClassifier(nn.Module):
             layers.extend([
                 nn.Linear(prev_dim, hidden_dim),
                 nn.ReLU(),
+                nn.Dropout(dropout)
             ])
             prev_dim = hidden_dim
         layers.append(nn.Linear(prev_dim, 2))
@@ -39,7 +40,7 @@ class FailureGater:
         self.alarm_counter = 0
         self.is_unsafe = False
 
-    def update((self, state, action)):
+    def update(self, state, action):
         """
         state: np.array (6,)
         action: np.array (6,)
