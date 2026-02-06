@@ -15,8 +15,8 @@ import numpy as np
 import torch
 
 from lerobot.configs import parser
-from lerobot.robots.factory import make_robot_from_config
-from lerobot.teleoperators.factory import make_teleoperator_from_config
+from lerobot.robots import make_robot_from_config
+from lerobot.teleoperators import make_teleoperator_from_config
 from lerobot.utils.control_utils import init_keyboard_listener
 from lerobot.utils.robot_utils import precise_sleep
 from lerobot.scripts.lerobot_record import RecordConfig
@@ -37,7 +37,10 @@ def main(cfg: RecordConfig):
     threshold = 0.29
     if results_path.exists():
         with open(results_path) as f:
-            threshold = json.load(f).get("optimal_threshold", 0.29)
+            data = json.load(f)
+            threshold = data.get("optimal_threshold", 0.29)
+            if threshold < 0.001: # Fallback if optimal is 0
+                threshold = data.get("recall_at_10pct_fpr_threshold", 0.29)
             print(f"Loaded threshold: {threshold:.3f}")
 
     model_path = Path("/Users/arjunvirk/Desktop/Projects/lerobot/failure_policies_research/models/best_model.pt")
@@ -61,7 +64,14 @@ def main(cfg: RecordConfig):
             
             # Get data
             obs = robot.get_observation()
-            state = obs["observation.state"].cpu().numpy()
+            
+            # Robust state extraction
+            state_key = "observation.state" if "observation.state" in obs else "state"
+            if state_key not in obs:
+                print(f"❌ Available keys in observation: {list(obs.keys())}")
+                raise KeyError(f"Could not find state in robot observation. Available: {list(obs.keys())}")
+            
+            state = obs[state_key].cpu().numpy().flatten()
             
             # Are we currently in a freeze?
             now = time.time()
