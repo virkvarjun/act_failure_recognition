@@ -71,12 +71,25 @@ def main(cfg: RecordConfig):
                 "wrist_flex.pos", "wrist_roll.pos", "gripper.pos"
             ]
             
+            def to_numpy(val):
+                if torch.is_tensor(val):
+                    return val.cpu().numpy().flatten()
+                return np.array([val])
+
             try:
-                state = np.array([obs[k].cpu().item() for k in joint_keys])
+                # Assemble state vector from joint keys
+                state_list = []
+                for k in joint_keys:
+                    val = obs[k]
+                    if torch.is_tensor(val):
+                        state_list.append(val.cpu().item())
+                    else:
+                        state_list.append(float(val))
+                state = np.array(state_list)
             except KeyError:
                 # Fallback to generic observation.state if it exists
                 if "observation.state" in obs:
-                    state = obs["observation.state"].cpu().numpy().flatten()
+                    state = to_numpy(obs["observation.state"]).flatten()
                 else:
                     print(f"❌ Available keys in observation: {list(obs.keys())}")
                     raise KeyError(f"Could not find expected joint keys or 'observation.state'.")
