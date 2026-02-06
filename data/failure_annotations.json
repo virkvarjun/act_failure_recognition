@@ -1,0 +1,83 @@
+{
+    "description": "Failure timestep annotations for each failure episode",
+    "warning_window_W": 15,
+    "fps": 10,
+    "instructions": "For each episode, t_failure is the frame where failure occurs (drop/miss/collision). Frames [t_failure-15, t_failure-1] will be labeled UNSAFE.",
+    "episodes": {
+        "0": {
+            "frames": 196,
+            "t_failure": null,
+            "notes": ""
+        },
+        "1": {
+            "frames": 145,
+            "t_failure": null,
+            "notes": ""
+        },
+        "2": {
+            "frames": 146,
+            "t_failure": null,
+            "notes": ""
+        },
+        "3": {
+            "frames": 179,
+            "t_failure": null,
+            "notes": ""
+        },
+        "4": {
+            "frames": 151,
+            "t_failure": null,
+            "notes": ""
+        },
+        "5": {
+            "frames": 159,
+            "t_failure": null,
+            "notes": ""
+        },
+        "6": {
+            "frames": 139,
+            "t_failure": null,
+            "notes": ""
+        },
+        "7": {
+            "frames": 145,
+            "t_failure": null,
+            "notes": ""
+        },
+        "8": {
+            "frames": 133,
+            "t_failure": null,
+            "notes": ""
+        },
+        "9": {
+            "frames": 146,
+            "t_failure": null,
+            "notes": ""
+        },
+        "10": {
+            "frames": 127,
+            "t_failure": null,
+            "notes": ""
+        },
+        "11": {
+            "frames": 154,
+            "t_failure": null,
+            "notes": ""
+        },
+        "12": {
+            "frames": 206,
+            "t_failure": null,
+            "notes": ""
+        },
+        "13": {
+            "frames": 149,
+            "t_failure": null,
+            "notes": ""
+        },
+        "14": {
+            "frames": 136,
+            "t_failure": null,
+            "notes": ""
+        }
+    }
+}
