@@ -31,8 +31,16 @@ def main(cfg: RecordConfig):
     robot = make_robot_from_config(cfg.robot)
     teleop = make_teleoperator_from_config(cfg.teleop)
     
+    # Load threshold from results if exists
+    results_path = Path("/Users/arjunvirk/Desktop/Projects/lerobot/failure_policies_research/models/results.json")
+    threshold = 0.29
+    if results_path.exists():
+        with open(results_path) as f:
+            threshold = json.load(f).get("optimal_threshold", 0.29)
+            print(f"Loaded threshold: {threshold:.3f}")
+
     model_path = Path("/Users/arjunvirk/Desktop/Projects/lerobot/failure_policies_research/models/best_model.pt")
-    gater = FailureGater(model_path=model_path)
+    gater = FailureGater(model_path=model_path, threshold=threshold)
     
     robot.connect()
     teleop.connect()
