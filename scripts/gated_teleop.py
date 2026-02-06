@@ -97,7 +97,7 @@ def main(cfg: RecordConfig):
             # Prepare action vector (same order as joints)
             action = teleop.get_action()
             
-            # Convert action values to tensors if they aren't already
+            # Convert action values to tissues for the gater
             action_tensors = []
             for v in action.values():
                 if torch.is_tensor(v):
@@ -113,8 +113,8 @@ def main(cfg: RecordConfig):
                 if not is_frozen:
                     print("⚠️  SAFETY FREEZE TRIGGERED! ⏸️")
                     is_frozen = True
-                # Command current state to freeze
-                freeze_action = torch.from_numpy(state).float().to(action_values.device)
+                # Command current state as dictionary to freeze
+                freeze_action = {k: v for k, v in zip(joint_keys, state)}
                 robot.send_action(freeze_action)
             else:
                 if is_frozen:
@@ -126,11 +126,12 @@ def main(cfg: RecordConfig):
                 unsafe = gater.update(state, action_values.cpu().numpy().flatten())
                 
                 if unsafe:
+                    print(f"🚨 UNSAFE detected! counter={gater.alarm_counter}/{gater.hysteresis_count}")
                     freeze_until = now + 0.5 # Freeze for 0.5s
-                    freeze_action = torch.from_numpy(state).float().to(action_values.device)
+                    freeze_action = {k: v for k, v in zip(joint_keys, state)}
                     robot.send_action(freeze_action)
                 else:
-                    robot.send_action(action_values)
+                    robot.send_action(action) # Send original action dict
             
             # Sync loop
             dt_s = time.perf_counter() - start_loop_t
