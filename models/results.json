@@ -1,0 +1,8 @@
+{
+  "test_auroc": 0.9430532368762752,
+  "test_accuracy": 0.8986323411102172,
+  "optimal_threshold": 0.00043442752212285995,
+  "recall_at_10pct_fpr": 0.7777777777777778,
+  "epochs_trained": 39,
+  "best_val_auroc": 0.9741967871485944
+}
