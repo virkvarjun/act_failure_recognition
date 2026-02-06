@@ -96,7 +96,16 @@ def main(cfg: RecordConfig):
             
             # Prepare action vector (same order as joints)
             action = teleop.get_action()
-            action_values = torch.cat([v for v in action.values()])
+            
+            # Convert action values to tensors if they aren't already
+            action_tensors = []
+            for v in action.values():
+                if torch.is_tensor(v):
+                    action_tensors.append(v)
+                else:
+                    action_tensors.append(torch.tensor([float(v)]))
+            
+            action_values = torch.cat(action_tensors).float()
             
             # Are we currently in a freeze?
             now = time.time()
