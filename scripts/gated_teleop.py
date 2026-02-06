@@ -65,13 +65,25 @@ def main(cfg: RecordConfig):
             # Get data
             obs = robot.get_observation()
             
-            # Robust state extraction
-            state_key = "observation.state" if "observation.state" in obs else "state"
-            if state_key not in obs:
-                print(f"❌ Available keys in observation: {list(obs.keys())}")
-                raise KeyError(f"Could not find state in robot observation. Available: {list(obs.keys())}")
+            # Assembly state vector from individual joint keys
+            joint_keys = [
+                "shoulder_pan.pos", "shoulder_lift.pos", "elbow_flex.pos", 
+                "wrist_flex.pos", "wrist_roll.pos", "gripper.pos"
+            ]
             
-            state = obs[state_key].cpu().numpy().flatten()
+            try:
+                state = np.array([obs[k].cpu().item() for k in joint_keys])
+            except KeyError:
+                # Fallback to generic observation.state if it exists
+                if "observation.state" in obs:
+                    state = obs["observation.state"].cpu().numpy().flatten()
+                else:
+                    print(f"❌ Available keys in observation: {list(obs.keys())}")
+                    raise KeyError(f"Could not find expected joint keys or 'observation.state'.")
+            
+            # Prepare action vector (same order as joints)
+            action = teleop.get_action()
+            action_values = torch.cat([v for v in action.values()])
             
             # Are we currently in a freeze?
             now = time.time()
@@ -80,23 +92,21 @@ def main(cfg: RecordConfig):
                     print("⚠️  SAFETY FREEZE TRIGGERED! ⏸️")
                     is_frozen = True
                 # Command current state to freeze
-                robot.send_action(obs["observation.state"])
+                freeze_action = torch.from_numpy(state).float().to(action_values.device)
+                robot.send_action(freeze_action)
             else:
                 if is_frozen:
                     print("✅ Safety reset. Resuming...")
                     is_frozen = False
                     gater.reset()
                 
-                # Normal teleop
-                action = teleop.get_action()
-                action_values = torch.cat([v for v in action.values()])
-                
                 # Check safety gate
-                unsafe = gater.update(state, action_values.cpu().numpy())
+                unsafe = gater.update(state, action_values.cpu().numpy().flatten())
                 
                 if unsafe:
                     freeze_until = now + 0.5 # Freeze for 0.5s
-                    robot.send_action(obs["observation.state"]) # Immediate freeze
+                    freeze_action = torch.from_numpy(state).float().to(action_values.device)
+                    robot.send_action(freeze_action)
                 else:
                     robot.send_action(action_values)
             
